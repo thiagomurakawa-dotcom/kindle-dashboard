@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Kindle Clima | Blanchardstown</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#151515;font-family:Georgia,'Times New Roman',serif}body{min-height:100vh}.wrap{max-width:1050px;margin:0 auto;padding:30px 38px 22px}.top{border-bottom:2px solid #111;padding-bottom:14px;overflow:hidden}.place{float:left;font:700 15px Arial,sans-serif;letter-spacing:2px}.updated{float:right;font:12px Arial,sans-serif;color:#555}.date{text-align:center;font-size:26px;margin:27px 0 0}.clock{text-align:center;font:300 132px Arial,Helvetica,sans-serif;letter-spacing:-7px;margin:0 0 14px;line-height:1.12}.today{border-top:2px solid #111;border-bottom:2px solid #111;padding:19px 0;overflow:hidden}.temp{float:left;font:normal 80px Arial,sans-serif;letter-spacing:-4px}.summary{float:right;text-align:right;padding-top:8px}.condition{font-size:26px}.range{font:18px Arial,sans-serif;margin-top:8px}.section{font:700 15px Arial,sans-serif;letter-spacing:2px;margin:27px 0 17px}.days{overflow:hidden;border-bottom:2px solid #111;padding-bottom:20px}.day{float:left;width:14.2857%;text-align:center;border-right:1px solid #ddd;min-height:135px}.day:last-child{border-right:0}.dayname{font:700 16px Arial,sans-serif}.symbol{font:36px Arial,sans-serif;margin:12px 0}.degrees{font:17px Arial,sans-serif}.foot{font:12px Arial,sans-serif;color:#666;text-align:center;margin-top:19px;line-height:1.5}.error{font:13px Arial,sans-serif;color:#555;text-align:center;margin-top:10px}@media(max-width:650px){.wrap{padding:18px 14px}.clock{font-size:85px}.date{font-size:19px}.temp{font-size:58px}.condition{font-size:19px}.dayname{font-size:12px}.symbol{font-size:27px}.degrees{font-size:13px}.day{min-height:110px}.place{font-size:12px}.updated{font-size:10px}}
+</style>
+</head>
+<body><div class="wrap">
+<div class="top"><span class="place">BLANCHARDSTOWN · DUBLIN</span><span class="updated" id="updated">PREVISÃO DO TEMPO</span></div>
+<div class="date" id="date">Carregando data...</div><div class="clock" id="clock">--:--</div>
+<div class="today"><div class="temp" id="temp">--°</div><div class="summary"><div class="condition" id="condition">Carregando clima...</div><div class="range" id="range">Máx --° · Mín --°</div></div></div>
+<div class="section">PRÓXIMOS 7 DIAS</div><div class="days" id="days"></div>
+<div class="error" id="error"></div><div class="foot">Dados: Open-Meteo · Atualização automática a cada 30 minutos<br>Design inspirado em leitores E-Ink</div>
+</div>
+<script>
+(function(){
+'use strict';
+var months=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+var weekdays=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+var shortdays=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+function el(id){return document.getElementById(id)}
+function pad(n){return n<10?'0'+n:''+n}
+function tick(){var d=new Date();el('date').innerHTML=weekdays[d.getDay()].toUpperCase()+', '+d.getDate()+' DE '+months[d.getMonth()].toUpperCase()+' DE '+d.getFullYear();el('clock').innerHTML=pad(d.getHours())+':'+pad(d.getMinutes())}
+function desc(c){if(c===0)return 'Céu limpo';if(c<=3)return 'Parcialmente nublado';if(c===45||c===48)return 'Nevoeiro';if(c>=51&&c<=67)return 'Chuva';if(c>=71&&c<=77)return 'Neve';if(c>=80&&c<=82)return 'Aguaceiros';if(c>=95)return 'Trovoada';return 'Tempo variável'}
+function sym(c){if(c===0)return '☼';if(c<=3)return '☁';if(c===45||c===48)return '≋';if(c>=71&&c<=77)return '❄';if(c>=95)return 'ϟ';if((c>=51&&c<=67)||(c>=80&&c<=82))return '☂';return '◌'}
+function parseDate(s){var p=s.split('-');return new Date(Number(p[0]),Number(p[1])-1,Number(p[2]))}
+function round(n){return Math.round(Number(n))}
+function render(j){var d=j.daily,c=j.current_weather||{};el('temp').innerHTML=(typeof c.temperature==='number'?round(c.temperature):round(d.temperature_2m_max[0]))+'°';el('condition').innerHTML=desc(typeof c.weathercode==='number'?c.weathercode:d.weather_code[0]);el('range').innerHTML='Máx '+round(d.temperature_2m_max[0])+'° · Mín '+round(d.temperature_2m_min[0])+'°';var html='';for(var i=0;i<7&&i<d.time.length;i++){var day=parseDate(d.time[i]);html+='<div class="day"><div class="dayname">'+shortdays[day.getDay()]+'</div><div class="symbol">'+sym(d.weather_code[i])+'</div><div class="degrees">'+round(d.temperature_2m_max[i])+'° / '+round(d.temperature_2m_min[i])+'°</div></div>'}el('days').innerHTML=html;el('updated').innerHTML='ATUALIZADO '+pad(new Date().getHours())+':'+pad(new Date().getMinutes());el('error').innerHTML=''}
+function load(){var url='https://api.open-meteo.com/v1/forecast?latitude=53.389&longitude=-6.375&current_weather=true&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FDublin&forecast_days=7';var x=new XMLHttpRequest();x.open('GET',url,true);x.onreadystatechange=function(){if(x.readyState===4){if(x.status>=200&&x.status<300){try{render(JSON.parse(x.responseText))}catch(e){el('error').innerHTML='Não foi possível interpretar a previsão.'}}else{el('error').innerHTML='Não foi possível atualizar o clima. Verifique o Wi-Fi e recarregue a página.'}}};x.onerror=function(){el('error').innerHTML='Sem conexão com o serviço de clima.'};try{x.send()}catch(e){el('error').innerHTML='O Safari não conseguiu acessar o serviço de clima.'}}
+tick();setInterval(tick,1000);load();setInterval(load,1800000);
+})();
+</script></body></html>
